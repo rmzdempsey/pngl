@@ -1,3 +1,7 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
 const steps = [
   {
     number: "1",
@@ -27,6 +31,64 @@ const reasons = [
 ];
 
 export default function Home() {
+  const [contactStatus, setContactStatus] = useState<string | null>(null);
+  const [ratesStatus, setRatesStatus] = useState<string | null>(null);
+  const [isContactSubmitting, setIsContactSubmitting] = useState(false);
+  const [isRatesSubmitting, setIsRatesSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>, endpoint: "contact" | "rates") {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    if (endpoint === "contact") {
+      setIsContactSubmitting(true);
+      setContactStatus(null);
+    } else {
+      setIsRatesSubmitting(true);
+      setRatesStatus(null);
+    }
+
+    try {
+      const response = await fetch(`/api/${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to send your message right now.");
+      }
+
+      form.reset();
+
+      if (endpoint === "contact") {
+        setContactStatus("Thanks — your enquiry has been sent to info@theproperty-network.com.");
+      } else {
+        setRatesStatus("Thanks — your rate enquiry has been sent to sales@theproperty-network.com.");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to send your message right now.";
+
+      if (endpoint === "contact") {
+        setContactStatus(message);
+      } else {
+        setRatesStatus(message);
+      }
+    } finally {
+      if (endpoint === "contact") {
+        setIsContactSubmitting(false);
+      } else {
+        setIsRatesSubmitting(false);
+      }
+    }
+  }
   return (
     <main className="site-shell">
       <header className="topbar">
@@ -124,22 +186,34 @@ export default function Home() {
           <div className="panel">
             <p className="section-kicker">Book your design</p>
             <h3>Get a free brochure or folder for your business.</h3>
-            <form className="form-grid">
-              <input placeholder="Your business name" aria-label="Your business name" />
-              <input placeholder="Contact email" aria-label="Contact email" />
-              <textarea placeholder="Tell us about your business and the brochure or folder you need" aria-label="Tell us about your business and the brochure or folder you need" />
-              <button type="button" className="button primary full-width">Send enquiry</button>
+            <form
+              className="form-grid"
+              onSubmit={(event) => handleSubmit(event, "contact")}
+            >
+              <input name="businessName" placeholder="Your business name" aria-label="Your business name" required />
+              <input name="businessEmail" type="email" placeholder="Contact email" aria-label="Contact email" required />
+              <textarea name="businessMessage" placeholder="Tell us about your business and the brochure or folder you need" aria-label="Tell us about your business and the brochure or folder you need" required />
+              <button type="submit" className="button primary full-width" disabled={isContactSubmitting}>
+                {isContactSubmitting ? "Sending..." : "Send enquiry"}
+              </button>
+              {contactStatus ? <p className="form-status">{contactStatus}</p> : null}
             </form>
           </div>
 
           <div className="panel muted-panel">
             <p className="section-kicker">Who can benefit</p>
             <h3>Business types that can benefit include wedding venues, golf clubs, estate agents and funeral directors.</h3>
-            <form className="form-grid">
-              <input placeholder="Your company name" aria-label="Your company name" />
-              <input placeholder="Phone number" aria-label="Phone number" />
-              <textarea placeholder="Tell us about your service or audience and we’ll advise on the right format" aria-label="Tell us about your service or audience and we’ll advise on the right format" />
-              <button type="button" className="button primary full-width">Request rates</button>
+            <form
+              className="form-grid"
+              onSubmit={(event) => handleSubmit(event, "rates")}
+            >
+              <input name="companyName" placeholder="Your company name" aria-label="Your company name" required />
+              <input name="companyPhone" placeholder="Phone number" aria-label="Phone number" required />
+              <textarea name="companyMessage" placeholder="Tell us about your service or audience and we’ll advise on the right format" aria-label="Tell us about your service or audience and we’ll advise on the right format" required />
+              <button type="submit" className="button primary full-width" disabled={isRatesSubmitting}>
+                {isRatesSubmitting ? "Sending..." : "Request rates"}
+              </button>
+              {ratesStatus ? <p className="form-status">{ratesStatus}</p> : null}
             </form>
           </div>
         </div>

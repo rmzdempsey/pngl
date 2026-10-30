@@ -408,6 +408,18 @@ img {
   width: 100%;
 }
 
+.button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.form-status {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #2d1b4b;
+}
+
 @media (max-width: 640px) {
   .button {
     width: 100%;
