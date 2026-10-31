@@ -21,6 +21,8 @@ export async function POST(request: Request) {
     await sendZohoMail({
       to: "info@theproperty-network.com",
       from: "info@theproperty-network.com",
+      smtpUser: process.env.ZOHO_SMTP_USER_INFO ?? process.env.ZOHO_SMTP_USER,
+      smtpPass: process.env.ZOHO_SMTP_PASS_INFO ?? process.env.ZOHO_SMTP_PASS,
       subject: "Brochure enquiry",
       text: `Business name: ${businessName}\nContact email: ${contactEmail}\n\n${message}`,
     });
